@@ -2,7 +2,11 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { initialMatches, statuses, formatTime, validateScore, type Match, type Status, } from "./data";
 import "./style.css";
+import { clubZones } from "./zones";
 import { buildStandings } from "./standings";
+import { clubs } from "./clubs";
+import { demoTournament, createDemoTournament, roundLabel } from "./demoTournament";
+import { ClubPages, Crest } from "./ClubPages";
 const divisions = [
     { id: "Regional", label: "Regional Amateur", detail: "2026 · Litoral Sur", code: "RA" },
     { id: "Primera", label: "1ra División", detail: "Clausura 2026", code: "1ª" },
@@ -14,14 +18,17 @@ const divisions = [
     { id: "Preoctava", label: "Preoctava", detail: "Clausura 2026", code: "PO" },
     { id: "Senior", label: "División Senior", detail: "Clausura 2026", code: "SR" },
 ];
-const categories = [...divisions, { id: "Reserva", label: "Reserva", detail: "Categoría demo existente", code: "R" }];
+const categories = [demoTournament, ...divisions.filter((division) => division.id !== demoTournament.id), { id: "Reserva", label: "Reserva", detail: "Categoría demo existente", code: "R" }];
 const sections = [{ id: "partidos", label: "Partidos" }, { id: "tabla", label: "Tabla" }, { id: "goleadores", label: "Goleadores" }, { id: "equipos", label: "Equipos" }];
 function readRoute() {
-    const [root, id, section] = location.hash.slice(1).split("/");
+    const [root, requestedId, section] = location.hash.slice(1).split("/");
+    const id = requestedId === "TorneoDemo" ? demoTournament.id : requestedId;
     return {
         category: categories.some((d) => d.id === id) ? id : root === "carga" ? "Primera" : "Todos",
         section: sections.some((s) => s.id === section) ? section : "partidos",
-        view: root === "carga" ? "carga" : "partidos",
+        clubId: root === "clubes" ? id : undefined,
+        clubSection: root === "clubes" && section === "estadio" ? "estadio" : "principal",
+        view: root === "clubes" ? "clubes" : root === "carga" ? "carga" : "partidos",
     };
 }
 const divisionUrl = (id: string, section = "partidos", view = "partidos") => `#${view === "carga" ? "carga" : "division"}/${id}/${section}`;
@@ -101,6 +108,19 @@ function Editor({ match, onSave, onCancel, }: {
       </form>
     </section>);
 }
+function TeamLink({ name }: { name: string }) {
+    const club = clubs.find((candidate) => `${candidate.name} (${candidate.locality})` === name);
+    return club ? <a className="team-club-link" href={`#clubes/${club.id}/principal`}><Crest club={club}/><span>{club.name}<small>{club.locality}</small></span></a> : <span>{name}</span>;
+}
+function StandingsTable({ title, rows }: { title: string; rows: ReturnType<typeof buildStandings> }) {
+    return <section className="zone-table" aria-label={title}>
+      <h3>{title}<span>{rows.length} clubes</span></h3>
+      {rows.length ? <div className="table-scroll"><table className="standings-table"><caption className="sr-only">Posiciones: {title}</caption>
+        <thead><tr>{["#", "Club", "PJ", "PG", "PE", "PP", "GF", "GC", "DG", "PTS"].map((heading) => <th scope="col" key={heading}>{heading}</th>)}</tr></thead>
+        <tbody>{rows.map((row, index) => <tr key={row.team}><td>{index + 1}</td><th scope="row"><TeamLink name={row.team}/></th><td>{row.played}</td><td>{row.won}</td><td>{row.drawn}</td><td>{row.lost}</td><td>{row.gf}</td><td>{row.ga}</td><td>{row.gf - row.ga}</td><td className="points">{row.points}</td></tr>)}</tbody>
+      </table></div> : <p className="empty">Sin equipos cargados.</p>}
+    </section>;
+}
 function MatchRows({ matches, onEdit }: { matches: Match[]; onEdit?: (id: number) => void }) {
     return (<ul className="matches">
                 {matches.map((m) => (<li className="match" key={m.id}>
@@ -113,15 +133,15 @@ function MatchRows({ matches, onEdit }: { matches: Match[]; onEdit?: (id: number
                     </div>
                     <div className="teams">
                       <div className="team home">
-                        <span>{m.home}</span>
-                        <span className="club-icon" aria-hidden="true">{m.home.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
+                        <TeamLink name={m.home}/>
+                        {!m.homeClubId && <span className="club-icon" aria-hidden="true">{m.home.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>}
                       </div>
                       <strong className={m.status === "En juego" ? "score live" : "score"} aria-label={`Marcador: ${m.homeGoals ?? "sin resultado"} a ${m.awayGoals ?? "sin resultado"}`}>
                         {m.homeGoals ?? "–"} - {m.awayGoals ?? "–"}
                       </strong>
                       <div className="team away">
-                        <span className="club-icon away" aria-hidden="true">{m.away.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
-                        <span>{m.away}</span>
+                        {!m.awayClubId && <span className="club-icon away" aria-hidden="true">{m.away.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>}
+                        <TeamLink name={m.away}/>
                       </div>
                     </div>
                     {onEdit && (<div className="match-bottom">
@@ -136,10 +156,11 @@ function MatchRows({ matches, onEdit }: { matches: Match[]; onEdit?: (id: number
 function App() {
     const [route, setRoute] = useState(readRoute);
     const { view, category, section } = route;
-    const [matches, setMatches] = useState(initialMatches);
+    const [matches, setMatches] = useState(() => [...initialMatches.filter((match) => match.category !== "Primera"), ...createDemoTournament()]);
     const [round, setRound] = useState(1);
     const [menuOpen, setMenuOpen] = useState(false);
-    const isHome = category === "Todos";
+    const isClubs = view === "clubes";
+    const isHome = category === "Todos" && !isClubs;
     const [statusFilter, setStatusFilter] = useState("Todos");
     const [selected, setSelected] = useState<number | null>(null);
     const [notice, setNotice] = useState("");
@@ -147,7 +168,9 @@ function App() {
     useEffect(() => {
         const handle = () => {
             if (location.hash === "#contenido") return;
-            setRoute(readRoute());
+            const nextRoute = readRoute();
+            setRoute(nextRoute);
+            if (nextRoute.category !== demoTournament.id && nextRoute.category !== "Todos") setRound((value) => Math.min(value, 2));
             setStatusFilter("Todos");
             setMenuOpen(false);
             setSelected(null);
@@ -163,6 +186,7 @@ function App() {
         setNotice("");
         setStatusFilter("Todos");
     };
+    const maxRound = category === demoTournament.id || isHome ? clubs.length - 1 : 2;
     const roundMatches = matches.filter((m) => m.round === round);
     const groups = categories.map((d) => ({ ...d, matches: roundMatches.filter((m) => m.category === d.id) })).filter((d) => d.matches.length > 0);
     const divisionMatches = matches.filter((m) => m.category === category);
@@ -180,47 +204,44 @@ function App() {
         </a>
         <nav aria-label="Navegación principal">
           <a href="#partidos" aria-current={isHome ? "page" : undefined}>La jornada</a>
-          <a href={divisionUrl(isHome ? "Primera" : category, "partidos", "carga")} aria-current={view === "carga" ? "page" : undefined}>Carga de resultados ↗</a>
+          <a href="#clubes" aria-current={isClubs ? "page" : undefined}>Clubes</a>
+          <a href={divisionUrl(isHome || isClubs ? "Primera" : category, "partidos", "carga")} aria-current={view === "carga" ? "page" : undefined}>Carga de resultados ↗</a>
         </nav>
       </header>
       <div className="app-layout">
       <aside className={`sidebar ${menuOpen ? "is-open" : ""}`} aria-label="Divisiones de la liga">
         <button className="mobile-menu-toggle" aria-expanded={menuOpen} aria-controls="division-menu" onClick={() => setMenuOpen(!menuOpen)} onKeyDown={(e) => { if (e.key === "Escape") setMenuOpen(false); }}>Divisiones <span aria-hidden="true">{menuOpen ? "−" : "+"}</span></button>
         <div id="division-menu" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setMenuOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") { setMenuOpen(false); document.querySelector<HTMLButtonElement>(".mobile-menu-toggle")?.focus(); } }}>
-        <div className="sidebar-heading"><span className="eyebrow">NUESTRA LIGA</span><h2>Divisiones</h2><span>Temporada 2026</span></div>
+        <div className="sidebar-heading"><h2>Competiciones</h2></div>
         <nav aria-label="Seleccionar división">
-          <a className="division-link all-matches-link" href="#partidos" aria-current={isHome ? "page" : undefined}><span className="division-code" aria-hidden="true">≡</span><span><strong>Todos los partidos</strong><small>La jornada completa</small></span></a>
+          <a className="division-link all-matches-link" href="#partidos" aria-current={isHome ? "page" : undefined}><span className="division-code" aria-hidden="true">≡</span><span><strong>Todos los partidos</strong></span></a>
           {divisions.map((d) => <a key={d.id} className="division-link" aria-current={category === d.id ? "page" : undefined} href={divisionUrl(d.id)}>
-            <span className="division-code" aria-hidden="true">{d.code}</span>
-            <span><strong>{d.label}</strong><small>{d.detail}</small></span>
+            <span className="division-marker" aria-hidden="true">{d.code}</span>
+            <span><strong>{d.label}</strong></span>
             <span className="division-arrow" aria-hidden="true">›</span>
           </a>)}
         </nav>
-        <div className="sidebar-demo"><span className="eyebrow">OTROS DATOS DEL PROTOTIPO</span>
-          <a className="division-link" aria-current={category === "Reserva" ? "page" : undefined} href={divisionUrl("Reserva")}><span className="division-code" aria-hidden="true">R</span><span><strong>Reserva</strong><small>Categoría demo existente</small></span></a>
+        <div className="sidebar-demo"><span className="eyebrow">MUESTRAS ANTERIORES</span>
+          <a className="division-link" aria-current={category === "Reserva" ? "page" : undefined} href={divisionUrl("Reserva")}><span className="division-marker" aria-hidden="true">R</span><span><strong>Reserva</strong></span></a>
         </div>
-        <p className="sidebar-note">100% LEF · Sitio no oficial<br/>Fútbol de la Liga Esperancina</p>
+
         </div>
       </aside>
       <div className="shell">
-      <div className="demo">
-        <strong>DEMO</strong>
-        <span>
-          Todos los equipos y resultados son ficticios. Los cambios se guardan
-          solo en memoria y se pierden al recargar.
-        </span>
-      </div>
+      <div className="demo"><strong>DEMO</strong><span>Resultados ficticios · Los cambios se pierden al recargar.</span></div>
       <main id="contenido" tabIndex={-1}>
-        <div className="edition-line"><span>100% LEF / {isHome ? "LA JORNADA" : division.label.toUpperCase()}</span><span>FÚTBOL DE ACÁ</span></div>
-        <div className="page-heading">
-          <h1>{view === "partidos" ? division.label : `Carga de resultados: ${division.label}`}</h1>
-          <span>{division.detail}</span>
+
+        <div className="page-heading" hidden={isClubs && Boolean(route.clubId)}>
+          <h1>{isClubs ? (clubs.find((club) => club.id === route.clubId)?.name ?? "Clubes afiliados") : view === "partidos" ? division.label : `Carga de resultados: ${division.label}`}</h1>
+          <span>{isClubs ? `${clubs.length} clubes · Liga Esperancina` : division.detail}</span>
         </div>
-        {(isHome || section === "partidos" || view === "carga") && <div className="date-bar">
+
+        {isClubs && <ClubPages key={route.clubId ?? "directory"} clubId={route.clubId} section={route.clubSection} matches={matches} />}
+        {!isClubs && (isHome || section === "partidos" || view === "carga") && <div className="date-bar">
           <div className="date-controls">
             <button aria-label="Fecha anterior" disabled={round === 1} onClick={() => { setRound(round - 1); setSelected(null); }}>‹</button>
             <label><span>FECHA</span><select aria-label="Fecha" value={round} onChange={(e) => { setRound(Number(e.target.value)); setSelected(null); }}><option value={1}>1 · Domingo 08 nov</option><option value={2}>2 · Domingo 15 nov</option></select></label>
-            <button aria-label="Fecha siguiente" disabled={round === 2} onClick={() => { setRound(round + 1); setSelected(null); }}>›</button>
+            <button aria-label="Fecha siguiente" disabled={round >= maxRound} onClick={() => { setRound(round + 1); setSelected(null); }}>›</button>
           </div>
           <span className="date-caption">{isHome ? roundMatches.length : filtered.length} partidos <span aria-hidden="true">/</span> Hora Argentina</span>
           {view === "carga" && <label className="load-category">División <select aria-label="Categoría" value={category} onChange={(e) => selectCategory(e.target.value)}>{categories.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}</select></label>}
@@ -232,7 +253,7 @@ function App() {
             <a className="group-footer" href={divisionUrl(group.id, "tabla")}>Tabla y estadísticas <span aria-hidden="true">→</span></a>
           </section>)}
           {groups.length === 0 && <p className="empty">No hay partidos cargados para esta fecha.</p>}
-          <p className="coverage-note">Se muestran todas las divisiones con partidos cargados en esta fecha. Las restantes siguen disponibles en el menú.</p>
+
         </div>}
         {view === "carga" && (<aside className="panel-note">
             <strong>Panel de demostración abierto</strong>
@@ -245,11 +266,15 @@ function App() {
           {sections.map((tab) => <a key={tab.id} href={divisionUrl(category, tab.id)} aria-current={section === tab.id ? "page" : undefined}>{tab.label}</a>)}
         </nav>}
         {view === "partidos" && section === "tabla" && <section className="data-panel" aria-labelledby="table-title">
-          <div className="fixture-top"><h2 id="table-title">Tabla de posiciones</h2><span className="demo-tag">DEMO</span></div>
-          <p className="panel-description">Todas las fechas. Solo partidos finalizados: 3 puntos por victoria y 1 por empate. Orden: puntos, diferencia de gol y goles a favor; igualdad restante por nombre. No representa el reglamento oficial.</p>
-          {standings.length ? <div className="table-scroll"><table><caption>Posiciones de {division.label}</caption><thead><tr>{["#", "Equipo", "PTS", "PJ", "PG", "PE", "PP", "GF", "GC", "DG"].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead><tbody>
-            {standings.map((row, i) => <tr key={row.team}><td>{i + 1}</td><th scope="row">{row.team}</th><td className="points">{row.points}</td><td>{row.played}</td><td>{row.won}</td><td>{row.drawn}</td><td>{row.lost}</td><td>{row.gf}</td><td>{row.ga}</td><td>{row.gf - row.ga}</td></tr>)}
-          </tbody></table></div> : <p className="empty">Todavía no hay equipos ni resultados cargados en esta división.</p>}
+          <h2 id="table-title" className="sr-only">Tabla de posiciones</h2>
+          {category === demoTournament.id ? <>
+            <p className="standings-note">Zonas según las imágenes de referencia. Puntos del torneo ficticio de 30 clubes, incluidos cruces entre zonas.</p>
+            {clubZones.map((zone) => {
+              const names = new Set(clubs.filter((club) => zone.clubIds.includes(club.id)).map((club) => `${club.name} (${club.locality})`));
+              return <StandingsTable key={zone.label} title={zone.label} rows={standings.filter((row) => names.has(row.team))}/>;
+            })}
+          </> : <StandingsTable title="Posiciones" rows={standings}/>}
+          <details className="table-rules"><summary>Criterios de la tabla</summary><p>Solo partidos finalizados. Victoria: 3 puntos; empate: 1. Desempate por diferencia de gol, goles a favor y nombre. Reglas de ejemplo.</p><p>Los cuatro clubes sin zona no aparecen en las imágenes proporcionadas.</p></details>
         </section>}
         {view === "partidos" && section === "goleadores" && <section className="data-panel" aria-labelledby="scorers-title">
           <div className="fixture-top"><h2 id="scorers-title">Goleadores</h2><span className="demo-tag">SIN DATOS</span></div>
@@ -257,15 +282,15 @@ function App() {
         </section>}
         {view === "partidos" && section === "equipos" && <section className="data-panel" aria-labelledby="teams-title">
           <div className="fixture-top"><h2 id="teams-title">Equipos</h2><span className="count">{standings.length} equipos demo</span></div>
-          {standings.length ? <ul className="division-teams">{standings.map((row) => <li key={row.team}><span className="division-code" aria-hidden="true">{row.team.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>{row.team}</li>)}</ul> : <p className="empty">Todavía no hay equipos cargados para esta división.</p>}
+          {standings.length ? <ul className="division-teams">{standings.map((row) => <li key={row.team}><TeamLink name={row.team}/></li>)}</ul> : <p className="empty">Todavía no hay equipos cargados para esta división.</p>}
         </section>}
-        <div className="layout" hidden={isHome || (view === "partidos" && section !== "partidos")}>
+        <div className="layout" hidden={isClubs || isHome || (view === "partidos" && section !== "partidos")}>
           <div>
             <section className="fixture" aria-labelledby="fixture-title">
               <div className="fixture-top">
                 <h2 id="fixture-title">
                   {view === "partidos"
-            ? `${division.label} · ${division.detail}`
+            ? "Partidos de la fecha"
             : "Seleccioná un partido"}
                 </h2>
                 <span className="count">{filtered.length} partidos</span>
@@ -274,7 +299,7 @@ function App() {
                 {["Todos", "En juego", "Finalizado"].map((state) => <button key={state} aria-pressed={statusFilter === state} onClick={() => setStatusFilter(state)}>{state} <span className="count">{filtered.filter((m) => state === "Todos" || m.status === state).length}</span></button>)}
               </div>
               <div className="match-heading">
-                <span>DOMINGO {round === 1 ? "08" : "15"} DE NOVIEMBRE</span>
+                <span>{roundLabel(round).toUpperCase()}</span>
                 <span>HORA ARGENTINA</span>
               </div>
               <MatchRows matches={visible} onEdit={view === "carga" ? (id) => { setSelected(id); setNotice(""); } : undefined} />
@@ -325,7 +350,7 @@ function App() {
       </main>
       <footer>
         <span className="footer-brand">100% LEF · ligaesp</span>
-        <span>No oficial · Datos ficticios · Sin conexión a Copa Fácil</span>
+        <span>No oficial · Partidos ficticios · Clubes de fuente oficial · Sin conexión a Copa Fácil</span>
       </footer>
       </div>
       </div>

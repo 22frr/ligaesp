@@ -49,7 +49,9 @@ En una máquina local, abrir `http://localhost:5173`. En un entorno remoto, abri
 - `#carga`: seleccionar un partido, editar goles y estado, indicar motivo y guardar. Volver a Partidos para comprobar el cambio.
 - Para corregir un error, abrir el mismo partido y guardar nuevamente con el motivo correspondiente. Cancelar descarta el formulario.
 
-Todos los equipos y resultados son ficticios. **Los cambios y el historial existen solo en memoria y se pierden al recargar**; no se usa localStorage ni API. La hora se presenta en Argentina. El panel está abierto, sin autenticación, exclusivamente para esta demostración: no debe usarse con datos reales ni credenciales. Las condiciones del MVP para producción siguen pendientes.
+El directorio `#clubes` incluye los 30 clubes de https://ligaesperancina.com/clubes/, con búsqueda por nombre o localidad y contactos publicados. Copia estática consultada el 13/11/2026, sin sincronización automática ni asignación a divisiones. Los datos ausentes se indican como no publicados.
+
+Los equipos de los partidos y sus resultados son ficticios. **Los cambios y el historial existen solo en memoria y se pierden al recargar**; no se usa localStorage ni API. La hora se presenta en Argentina. El panel está abierto, sin autenticación, exclusivamente para esta demostración: no debe usarse con datos reales ni credenciales. Las condiciones del MVP para producción siguen pendientes.
 
 Desde `frontend/`:
 
@@ -59,3 +61,13 @@ npm.cmd run preview -- --port 4173
 ```
 
 La compilación ejecuta TypeScript y genera `frontend/dist/`. `preview` permite revisar esa compilación en `http://localhost:4173`, sin publicar la web. Cada división tiene enlaces propios con Partidos, Tabla, Goleadores y Equipos (por ejemplo, `#division/Primera/tabla`). La tabla demo se calcula a partir de los partidos finalizados de todas las fechas y se actualiza al corregirlos en la sesión; no aplica un reglamento oficial. Goleadores muestra un estado sin datos porque no se registran autores de goles. Se usan acentos violetas sobre la base azul. No se implementan administración de competiciones ni controles de acceso de producción.
+
+## Torneo de ejemplo
+
+`#division/Primera/partidos` abre el **torneo de ejemplo de Primera**: 30 clubes, 29 fechas y 435 encuentros, todos contra todos a una rueda. Cada club tiene 14 o 15 localías. Las primeras dos fechas incluyen resultados inventados y el resto está programado. El calendario ficticio va del 08/11/2026 al 23/05/2027. El enlace anterior `#division/TorneoDemo/partidos` sigue funcionando.
+
+Las posiciones se agrupan en Norte y Sur (13 clubes cada una), según las imágenes del usuario. Los cuatro clubes restantes figuran sin zona asignada. Es una agrupación visual: el fixture conserva cruces entre zonas y todos los resultados finalizados cuentan para los puntos. Los puntajes de las imágenes no se copiaron.
+
+Corregir resultados actualiza la tabla y las fichas durante la sesión. Al recargar se restablece la muestra: no hay persistencia ni backend. La antigua muestra de Primera fue reemplazada por este torneo; Reserva se conserva por separado.
+
+Para verificar fixture, zonas y posiciones: `cd frontend` y `node verify-tournament.cjs`.

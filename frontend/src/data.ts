@@ -7,6 +7,8 @@ export const statuses = [
 ] as const;
 export type Status = (typeof statuses)[number];
 export type Match = {
+  homeClubId?: string;
+  awayClubId?: string;
   id: number;
   round: number;
   category: string;
