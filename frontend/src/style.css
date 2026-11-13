@@ -6,6 +6,8 @@
   font-synthesis: none;
   --muted: #aec4df;
   --line: #2b4b70;
+  --division-accent: #9bc9ff;
+  --division-tint: #193954;
 }
 * { box-sizing: border-box; }
 body { margin: 0; }
@@ -389,8 +391,8 @@ body { line-height: 1.5; }
 .competition-settings label { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
 .competition-settings input { width: 18px; height: 18px; accent-color: #b8caff; }
 .knockout-panel { margin-top: 20px; padding: 18px; background: #0a203b; border: 1px solid var(--line); border-radius: 4px; }
-.standings-table .in-knockout>td:first-child { box-shadow: inset 3px 0 #99d0ab; }
-.standings-table .in-knockout:nth-child(8)>* { border-bottom: 2px solid #99d0ab; }
+.standings-table .in-knockout>td:first-child { box-shadow: inset 4px 0 #72d7a1; background: #1b493b; color: #b8efcb; font-weight: 700; }
+.standings-table .in-knockout:nth-child(8)>* { border-bottom: 2px solid #72d7a1; }
 .knockout-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 16px; }
 .knockout-heading h2 { font-size: 20px; }
 .knockout-heading p, .knockout-description, .knockout-status { color: var(--muted); font-size: 14px; }
@@ -449,3 +451,40 @@ body { line-height: 1.5; }
 @media (max-width: 600px) {
   .teams .team-club-link { flex-direction: column; gap: 4px; }
 }
+
+/* Acentos por competición, compartidos por navegación, pestañas y partidos. */
+[data-division="TorneoDemo"] { --division-accent: #f2ce7b; --division-tint: #443923; }
+[data-division="Regional"] { --division-accent: #84ddd0; --division-tint: #17443f; }
+[data-division="Primera"] { --division-accent: #9bc9ff; --division-tint: #203e65; }
+[data-division="Tercera"] { --division-accent: #c4b0ff; --division-tint: #353056; }
+[data-division="Quinta"] { --division-accent: #9bd6a7; --division-tint: #224434; }
+[data-division="Sexta"] { --division-accent: #8ed7ec; --division-tint: #194151; }
+[data-division="Septima"] { --division-accent: #f0b78d; --division-tint: #4a342b; }
+[data-division="Octava"] { --division-accent: #e3b3d9; --division-tint: #46304b; }
+[data-division="Preoctava"] { --division-accent: #cbda90; --division-tint: #37432a; }
+[data-division="Senior"] { --division-accent: #f0aaa9; --division-tint: #493137; }
+[data-division="Reserva"] { --division-accent: #a6c9cd; --division-tint: #294148; }
+.sidebar .division-link .division-marker { color: var(--division-accent); }
+.sidebar .division-link[data-division]:hover { background: var(--division-tint); }
+.sidebar .division-link[data-division][aria-current] { background: var(--division-tint); box-shadow: inset 3px 0 var(--division-accent); }
+.sidebar .division-link[data-division][aria-current] .division-arrow { color: var(--division-accent); }
+.page-heading { border-left: 4px solid var(--division-accent); padding-left: 14px; }
+.division-tabs { border-bottom-color: var(--line); }
+.division-tabs a[aria-current] { background: var(--division-tint); border-bottom-color: var(--division-accent); }
+.fixture-top { background: var(--division-tint); border-left: 3px solid var(--division-accent); }
+.fixture-top h2 a>span, .date-controls label>span, .group-footer, .status-filters button[aria-pressed=true] { color: var(--division-accent); }
+.status-filters button[aria-pressed=true] { border-bottom-color: var(--division-accent); }
+.knockout-stage h3 { border-bottom-color: var(--division-accent); }
+
+/* Las zonas conservan su identidad al cambiar de división. */
+.zone-table { --table-accent: #a6bacf; --table-heading: #293e50; --table-even: #152d42; --table-hover: #263f54; }
+.zone-table[data-zone="north"] { --table-accent: #96d3fa; --table-heading: #214761; --table-even: #15364f; --table-hover: #254e6b; }
+.zone-table[data-zone="south"] { --table-accent: #f0c18c; --table-heading: #493a2b; --table-even: #302f2d; --table-hover: #4b3c31; }
+.zone-table[data-zone="general"] { --table-accent: #b8bdff; --table-heading: #303c60; --table-even: #1d2d4f; --table-hover: #354468; }
+.zone-table h3 { background: var(--table-heading); border-bottom-color: var(--table-accent); }
+.zone-table h3 span { color: #e0e8f3; }
+.zone-table .standings-table thead { background: #0c233c; color: var(--table-accent); }
+.zone-table .standings-table tbody tr:nth-child(even) { background: var(--table-even); }
+.zone-table .standings-table tbody tr:hover { background: var(--table-hover); }
+.zone-table .standings-table .points { color: var(--table-accent); background: #ffffff08; }
+.zone-table h3 .qualification-label { color: #b8efcb; }

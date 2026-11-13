@@ -114,8 +114,9 @@ function TeamLink({ name }: { name: string }) {
     return club ? <a className="team-club-link" href={`#clubes/${club.id}/principal`}><Crest club={club}/><span>{club.name}<small>{club.locality}</small></span></a> : <span>{name}</span>;
 }
 function StandingsTable({ title, rows, qualifying = false }: { title: string; rows: ReturnType<typeof buildStandings>; qualifying?: boolean }) {
-    return <section className="zone-table" aria-label={title}>
-      <h3>{title}<span>{rows.length} clubes</span></h3>
+    const tone = title === "Zona Norte" ? "north" : title === "Zona Sur" ? "south" : title === "Tabla general" ? "general" : "other";
+    return <section className="zone-table" data-zone={tone} aria-label={title}>
+      <h3>{title}<span>{rows.length} clubes{qualifying && rows.length > 0 && <span className="qualification-label"> · 8 a octavos</span>}</span></h3>
       {rows.length ? <div className="table-scroll"><table className="standings-table"><caption className="sr-only">Posiciones: {title}</caption>
         <thead><tr>{["#", "Club", "PJ", "PG", "PE", "PP", "GF", "GC", "DG", "PTS"].map((heading) => <th scope="col" key={heading}>{heading}</th>)}</tr></thead>
         <tbody>{rows.map((row, index) => <tr key={row.team} className={qualifying && index < 8 ? "in-knockout" : undefined}><td>{index + 1}{qualifying && index < 8 && <span className="sr-only"> · En puestos de octavos, provisional</span>}</td><th scope="row"><TeamLink name={row.team}/></th><td>{row.played}</td><td>{row.won}</td><td>{row.drawn}</td><td>{row.lost}</td><td>{row.gf}</td><td>{row.ga}</td><td>{row.gf - row.ga}</td><td className="points">{row.points}</td></tr>)}</tbody>
@@ -211,22 +212,22 @@ function App() {
           <a href={divisionUrl(isHome || isClubs ? "Primera" : category, "partidos", "carga")} aria-current={view === "carga" ? "page" : undefined}>Carga de resultados ↗</a>
         </nav>
       </header>
-      <div className="app-layout">
+      <div className="app-layout" data-division={category}>
       <aside className={`sidebar ${menuOpen ? "is-open" : ""}`} aria-label="Divisiones de la liga">
         <button className="mobile-menu-toggle" aria-expanded={menuOpen} aria-controls="division-menu" onClick={() => setMenuOpen(!menuOpen)} onKeyDown={(e) => { if (e.key === "Escape") setMenuOpen(false); }}>Divisiones <span aria-hidden="true">{menuOpen ? "−" : "+"}</span></button>
         <div id="division-menu" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setMenuOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") { setMenuOpen(false); document.querySelector<HTMLButtonElement>(".mobile-menu-toggle")?.focus(); } }}>
         <div className="sidebar-heading"><h2>Competiciones</h2></div>
         <nav aria-label="Seleccionar división">
-          <a className="division-link" aria-current={category === demoTournament.id ? "page" : undefined} href={divisionUrl(demoTournament.id, "tabla")}><span className="division-marker" aria-hidden="true">C</span><span><strong>Copa de ejemplo</strong></span><span className="division-arrow" aria-hidden="true">›</span></a>
+          <a className="division-link" data-division={demoTournament.id} aria-current={category === demoTournament.id ? "page" : undefined} href={divisionUrl(demoTournament.id, "tabla")}><span className="division-marker" aria-hidden="true">C</span><span><strong>Copa de ejemplo</strong></span><span className="division-arrow" aria-hidden="true">›</span></a>
           <a className="division-link all-matches-link" href="#partidos" aria-current={isHome ? "page" : undefined}><span className="division-code" aria-hidden="true">≡</span><span><strong>Todos los partidos</strong></span></a>
-          {divisions.map((d) => <a key={d.id} className="division-link" aria-current={category === d.id ? "page" : undefined} href={divisionUrl(d.id)}>
+          {divisions.map((d) => <a key={d.id} className="division-link" data-division={d.id} aria-current={category === d.id ? "page" : undefined} href={divisionUrl(d.id)}>
             <span className="division-marker" aria-hidden="true">{d.code}</span>
             <span><strong>{d.label}</strong></span>
             <span className="division-arrow" aria-hidden="true">›</span>
           </a>)}
         </nav>
         <div className="sidebar-demo"><span className="eyebrow">MUESTRAS ANTERIORES</span>
-          <a className="division-link" aria-current={category === "Reserva" ? "page" : undefined} href={divisionUrl("Reserva")}><span className="division-marker" aria-hidden="true">R</span><span><strong>Reserva</strong></span></a>
+          <a className="division-link" data-division="Reserva" aria-current={category === "Reserva" ? "page" : undefined} href={divisionUrl("Reserva")}><span className="division-marker" aria-hidden="true">R</span><span><strong>Reserva</strong></span></a>
         </div>
 
         </div>
@@ -251,7 +252,7 @@ function App() {
           {view === "carga" && <label className="load-category">División <select aria-label="Categoría" value={category} onChange={(e) => selectCategory(e.target.value)}>{categories.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}</select></label>}
         </div>}
         {isHome && <div className="day-fixture">
-          {groups.map((group) => <section className="fixture" key={group.id} aria-labelledby={`group-${group.id}`}>
+          {groups.map((group) => <section className="fixture" data-division={group.id} key={group.id} aria-labelledby={`group-${group.id}`}>
             <div className="fixture-top"><h2 id={`group-${group.id}`}><a href={divisionUrl(group.id)}>{group.label} <span aria-hidden="true">↗</span></a></h2><span className="count">{group.detail}</span></div>
             <MatchRows matches={group.matches} />
             <a className="group-footer" href={divisionUrl(group.id, "tabla")}>Tabla y estadísticas <span aria-hidden="true">→</span></a>
