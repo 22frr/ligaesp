@@ -7,6 +7,7 @@ import { buildStandings } from "./standings";
 import { clubs } from "./clubs";
 import { demoTournament, createDemoTournament, roundLabel } from "./demoTournament";
 import { ClubPages, Crest } from "./ClubPages";
+import { Knockout } from "./Knockout";
 const divisions = [
     { id: "Regional", label: "Regional Amateur", detail: "2026 · Litoral Sur", code: "RA" },
     { id: "Primera", label: "1ra División", detail: "Clausura 2026", code: "1ª" },
@@ -19,7 +20,7 @@ const divisions = [
     { id: "Senior", label: "División Senior", detail: "Clausura 2026", code: "SR" },
 ];
 const categories = [demoTournament, ...divisions.filter((division) => division.id !== demoTournament.id), { id: "Reserva", label: "Reserva", detail: "Categoría demo existente", code: "R" }];
-const sections = [{ id: "partidos", label: "Partidos" }, { id: "tabla", label: "Tabla" }, { id: "goleadores", label: "Goleadores" }, { id: "equipos", label: "Equipos" }];
+const sections = [{ id: "partidos", label: "Partidos" }, { id: "tabla", label: "Tabla" }, { id: "eliminatorias", label: "Eliminatorias" }, { id: "goleadores", label: "Goleadores" }, { id: "equipos", label: "Equipos" }];
 function readRoute() {
     const [root, requestedId, section] = location.hash.slice(1).split("/");
     const id = requestedId === "TorneoDemo" ? demoTournament.id : requestedId;
@@ -112,12 +113,12 @@ function TeamLink({ name }: { name: string }) {
     const club = clubs.find((candidate) => `${candidate.name} (${candidate.locality})` === name);
     return club ? <a className="team-club-link" href={`#clubes/${club.id}/principal`}><Crest club={club}/><span>{club.name}<small>{club.locality}</small></span></a> : <span>{name}</span>;
 }
-function StandingsTable({ title, rows }: { title: string; rows: ReturnType<typeof buildStandings> }) {
+function StandingsTable({ title, rows, qualifying = false }: { title: string; rows: ReturnType<typeof buildStandings>; qualifying?: boolean }) {
     return <section className="zone-table" aria-label={title}>
       <h3>{title}<span>{rows.length} clubes</span></h3>
       {rows.length ? <div className="table-scroll"><table className="standings-table"><caption className="sr-only">Posiciones: {title}</caption>
         <thead><tr>{["#", "Club", "PJ", "PG", "PE", "PP", "GF", "GC", "DG", "PTS"].map((heading) => <th scope="col" key={heading}>{heading}</th>)}</tr></thead>
-        <tbody>{rows.map((row, index) => <tr key={row.team}><td>{index + 1}</td><th scope="row"><TeamLink name={row.team}/></th><td>{row.played}</td><td>{row.won}</td><td>{row.drawn}</td><td>{row.lost}</td><td>{row.gf}</td><td>{row.ga}</td><td>{row.gf - row.ga}</td><td className="points">{row.points}</td></tr>)}</tbody>
+        <tbody>{rows.map((row, index) => <tr key={row.team} className={qualifying && index < 8 ? "in-knockout" : undefined}><td>{index + 1}{qualifying && index < 8 && <span className="sr-only"> · En puestos de octavos, provisional</span>}</td><th scope="row"><TeamLink name={row.team}/></th><td>{row.played}</td><td>{row.won}</td><td>{row.drawn}</td><td>{row.lost}</td><td>{row.gf}</td><td>{row.ga}</td><td>{row.gf - row.ga}</td><td className="points">{row.points}</td></tr>)}</tbody>
       </table></div> : <p className="empty">Sin equipos cargados.</p>}
     </section>;
 }
@@ -165,6 +166,8 @@ function App() {
     const [selected, setSelected] = useState<number | null>(null);
     const [notice, setNotice] = useState("");
     const [history, setHistory] = useState<Entry[]>([]);
+    const [enabledKnockouts, setEnabledKnockouts] = useState<Record<string, boolean>>({});
+    const knockoutEnabled = enabledKnockouts[category] ?? false;
     useEffect(() => {
         const handle = () => {
             if (location.hash === "#contenido") return;
@@ -214,6 +217,7 @@ function App() {
         <div id="division-menu" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setMenuOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") { setMenuOpen(false); document.querySelector<HTMLButtonElement>(".mobile-menu-toggle")?.focus(); } }}>
         <div className="sidebar-heading"><h2>Competiciones</h2></div>
         <nav aria-label="Seleccionar división">
+          <a className="division-link" aria-current={category === demoTournament.id ? "page" : undefined} href={divisionUrl(demoTournament.id, "tabla")}><span className="division-marker" aria-hidden="true">C</span><span><strong>Copa de ejemplo</strong></span><span className="division-arrow" aria-hidden="true">›</span></a>
           <a className="division-link all-matches-link" href="#partidos" aria-current={isHome ? "page" : undefined}><span className="division-code" aria-hidden="true">≡</span><span><strong>Todos los partidos</strong></span></a>
           {divisions.map((d) => <a key={d.id} className="division-link" aria-current={category === d.id ? "page" : undefined} href={divisionUrl(d.id)}>
             <span className="division-marker" aria-hidden="true">{d.code}</span>
@@ -240,10 +244,10 @@ function App() {
         {!isClubs && (isHome || section === "partidos" || view === "carga") && <div className="date-bar">
           <div className="date-controls">
             <button aria-label="Fecha anterior" disabled={round === 1} onClick={() => { setRound(round - 1); setSelected(null); }}>‹</button>
-            <label><span>FECHA</span><select aria-label="Fecha" value={round} onChange={(e) => { setRound(Number(e.target.value)); setSelected(null); }}><option value={1}>1 · Domingo 08 nov</option><option value={2}>2 · Domingo 15 nov</option></select></label>
+            <label><span>FECHA</span><select aria-label="Fecha" value={round} onChange={(e) => { setRound(Number(e.target.value)); setSelected(null); }}>{Array.from({ length: maxRound }, (_, index) => <option key={index + 1} value={index + 1}>{index + 1} · {roundLabel(index + 1)}</option>)}</select></label>
             <button aria-label="Fecha siguiente" disabled={round >= maxRound} onClick={() => { setRound(round + 1); setSelected(null); }}>›</button>
           </div>
-          <span className="date-caption">{isHome ? roundMatches.length : filtered.length} partidos <span aria-hidden="true">/</span> Hora Argentina</span>
+          <span className="date-caption">{isHome ? roundMatches.length : filtered.length} partidos</span>
           {view === "carga" && <label className="load-category">División <select aria-label="Categoría" value={category} onChange={(e) => selectCategory(e.target.value)}>{categories.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}</select></label>}
         </div>}
         {isHome && <div className="day-fixture">
@@ -262,20 +266,27 @@ function App() {
               probar cargas y correcciones; no es un panel seguro de producción.
             </p>
           </aside>)}
+        {view === "carga" && <section className="competition-settings" aria-label="Configuración del torneo demo"><label><input type="checkbox" checked={knockoutEnabled} onChange={(event) => setEnabledKnockouts((previous) => ({ ...previous, [category]: event.target.checked }))}/> Habilitar eliminatorias de {division.label}</label></section>}
         {view === "partidos" && !isHome && <nav className="division-tabs" aria-label="Secciones de la división">
-          {sections.map((tab) => <a key={tab.id} href={divisionUrl(category, tab.id)} aria-current={section === tab.id ? "page" : undefined}>{tab.label}</a>)}
+          {sections.map((tab) => tab.id === "eliminatorias" && !knockoutEnabled ? <button key={tab.id} type="button" disabled title="Pendiente de habilitación">{tab.label}</button> : <a key={tab.id} href={divisionUrl(category, tab.id)} aria-current={section === tab.id ? "page" : undefined}>{tab.label}</a>)}
         </nav>}
         {view === "partidos" && section === "tabla" && <section className="data-panel" aria-labelledby="table-title">
           <h2 id="table-title" className="sr-only">Tabla de posiciones</h2>
-          {category === demoTournament.id ? <>
-            <p className="standings-note">Zonas según las imágenes de referencia. Puntos del torneo ficticio de 30 clubes, incluidos cruces entre zonas.</p>
-            {clubZones.map((zone) => {
+          <>
+            {clubZones.slice(0, 2).map((zone) => {
               const names = new Set(clubs.filter((club) => zone.clubIds.includes(club.id)).map((club) => `${club.name} (${club.locality})`));
-              return <StandingsTable key={zone.label} title={zone.label} rows={standings.filter((row) => names.has(row.team))}/>;
+              return <StandingsTable key={zone.label} title={zone.label} qualifying rows={standings.filter((row) => names.has(row.team))}/>;
             })}
-          </> : <StandingsTable title="Posiciones" rows={standings}/>}
+            <StandingsTable title="Tabla general" rows={standings}/>
+            {(() => {
+              const zonedNames = new Set(clubs.filter((club) => clubZones.slice(0, 2).some((zone) => zone.clubIds.includes(club.id))).map((club) => `${club.name} (${club.locality})`));
+              const remaining = standings.filter((row) => !zonedNames.has(row.team));
+              return remaining.length > 0 && <StandingsTable title="Sin zona asignada" rows={remaining}/>;
+            })()}
+          </>
           <details className="table-rules"><summary>Criterios de la tabla</summary><p>Solo partidos finalizados. Victoria: 3 puntos; empate: 1. Desempate por diferencia de gol, goles a favor y nombre. Reglas de ejemplo.</p><p>Los cuatro clubes sin zona no aparecen en las imágenes proporcionadas.</p></details>
         </section>}
+        {view === "partidos" && section === "eliminatorias" && (knockoutEnabled ? <Knockout matches={divisionMatches} category={category}/> : <p className="empty">Las eliminatorias aún no están habilitadas. <a href={divisionUrl(category, "tabla")}>Ver tabla</a></p>)}
         {view === "partidos" && section === "goleadores" && <section className="data-panel" aria-labelledby="scorers-title">
           <div className="fixture-top"><h2 id="scorers-title">Goleadores</h2><span className="demo-tag">SIN DATOS</span></div>
           <p className="empty">Todavía no hay goleadores registrados para {division.label}. Los marcadores actuales no incluyen autores de los goles.</p>
@@ -300,13 +311,12 @@ function App() {
               </div>
               <div className="match-heading">
                 <span>{roundLabel(round).toUpperCase()}</span>
-                <span>HORA ARGENTINA</span>
               </div>
               <MatchRows matches={visible} onEdit={view === "carga" ? (id) => { setSelected(id); setNotice(""); } : undefined} />
               {visible.length === 0 && <p className="empty">{filtered.length === 0 ? "Todavía no hay partidos cargados para esta división y fecha." : "No hay partidos con este filtro."}</p>}
               <div className="fixture-footer">
                 {last
-            ? `Última actualización de esta selección: ${formatTime(last)} (Argentina)`
+            ? `Actualizado: ${formatTime(last)}`
             : "Sin partidos para esta selección."}
               </div>
             </section>

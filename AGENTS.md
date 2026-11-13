@@ -19,6 +19,15 @@
 - Al terminar, resumir qué cambió, qué se verificó y cómo verlo localmente. Indicar las verificaciones pendientes, incluida la revisión en navegador cuando no se haya realizado.
 - Mantener documentación breve y útil para el portfolio: README actualizado, alcance y decisiones técnicas relevantes. No generar documentos ni registros por cada ajuste menor.
 
+## Interfaz y contenido
+
+- Priorizar textos breves, sin reiteraciones, y mostrar solo lo necesario para consultar el fútbol local.
+- Evitar aclaraciones obvias para el público de la zona, como «Hora Argentina», y controles de demostración en las vistas públicas.
+- Mantener las tablas visibles en su sección, sin desplegables para acceder a ellas.
+- En todas las divisiones, ordenar las tablas como Zona Norte, Zona Sur, General y las restantes. Clasifican ocho equipos por zona.
+- Mantener el botón Eliminatorias visible y deshabilitado hasta su habilitación, independiente por división; bloquear también el acceso directo al cuadro.
+- Habilitar la sección pública de eliminatorias desde administración; no ofrecer controles públicos para mostrarla u ocultarla. Mientras no haya autenticación y backend, identificar ese control como parte del panel demo.
+
 ## Trabajo desde la nube
 
 - Si el usuario trabaja desde el celular en la nube, aclarar que los cambios quedan en otro entorno.

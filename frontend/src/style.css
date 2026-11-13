@@ -180,6 +180,8 @@ body { background: #102d50; min-height: 100vh; }
 .division-tabs a { padding: 10px 18px; font-size: 13px; text-decoration: none; border-bottom: 3px solid transparent; color: var(--muted); }
 .division-tabs a:hover { background: #263455; color: white; }
 .division-tabs a[aria-current] { background: #292e4d; border-bottom-color: var(--violet); color: white; }
+.division-tabs button:disabled { padding: 10px 18px; font-size: 15px; color: var(--muted); background: transparent; border: 0; border-bottom: 3px solid transparent; border-radius: 0; opacity: .6; cursor: not-allowed; }
+@media (max-width: 700px) { .division-tabs button:disabled { padding: 10px; font-size: 14px; flex: 1; } }
 .data-panel { background: #0a203b; border-radius: 2px; overflow: hidden; border-top: 3px solid #9973c8; }
 .demo-tag { font-size: 10px; color: #e0ccff; background: #3b2c57; border: 1px solid #78608e; border-radius: 4px; padding: 3px 7px; }
 .panel-description { padding: 10px 16px; color: var(--muted); font-size: 11px; }
@@ -383,6 +385,44 @@ body { line-height: 1.5; }
 .standings-table .club-crest { width: 22px; height: 24px; }
 .table-rules { padding: 0 16px 16px; font-size: 13px; color: var(--muted); }
 .table-rules summary { cursor: pointer; padding-block: 8px; }
+.competition-settings { margin-bottom: 18px; padding: 12px 14px; background: #193954; }
+.competition-settings label { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+.competition-settings input { width: 18px; height: 18px; accent-color: #b8caff; }
+.knockout-panel { margin-top: 20px; padding: 18px; background: #0a203b; border: 1px solid var(--line); border-radius: 4px; }
+.standings-table .in-knockout>td:first-child { box-shadow: inset 3px 0 #99d0ab; }
+.standings-table .in-knockout:nth-child(8)>* { border-bottom: 2px solid #99d0ab; }
+.knockout-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 16px; }
+.knockout-heading h2 { font-size: 20px; }
+.knockout-heading p, .knockout-description, .knockout-status { color: var(--muted); font-size: 14px; }
+.knockout-heading label { display: grid; gap: 6px; font-size: 13px; }
+.knockout-heading select { font-size: 14px; max-width: 100%; }
+.knockout-description { margin-block: 16px; }
+.knockout-status { border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.bracket-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 14px 0; }
+.bracket-actions button { font-size: 14px; }
+.bracket-actions span { font-size: 13px; color: var(--muted); }
+.knockout-grid { display: grid; grid-template-columns: repeat(4, minmax(230px, 1fr)); gap: 16px; overflow-x: auto; padding-bottom: 12px; }
+.knockout-stage h3 { margin: 0 0 12px; font-size: 16px; padding: 8px 0; border-bottom: 2px solid #7e9ac5; }
+.knockout-stage-note { font-size: 13px; color: var(--muted); min-height: 40px; }
+.knockout-tie { border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; margin-bottom: 12px; background: #14304d; }
+.tie-number { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+.bracket-team { display: flex; align-items: center; gap: 6px; min-height: 52px; padding: 5px 0; }
+.bracket-team+.bracket-team { border-top: 1px solid var(--line); }
+.bracket-team a { display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; flex: 1; }
+.bracket-team a:hover { text-decoration: underline; }
+.bracket-team .club-crest { width: 25px; height: 28px; }
+.bracket-team small { display: block; font-size: 12px; color: var(--muted); }
+.bracket-team select { width: 100%; min-width: 0; font-size: 13px; padding: 7px 4px; }
+.advance-button { padding: 5px 8px; font-size: 14px; }
+.is-winner .advance-button { background: #2e644e; border-color: #99d0ab; }
+.is-winner { color: #b8eaca; }
+.bracket-champion { padding: 14px; border: 1px solid #99d0ab; font-size: 15px; }
+@media (max-width: 600px) {
+  .knockout-panel { padding: 12px; }
+  .knockout-heading label, .knockout-heading select { width: 100%; }
+  .knockout-grid { grid-template-columns: 1fr; overflow-x: visible; }
+  .knockout-stage-note { min-height: 0; }
+}
 .clubs-grid strong { font-size: 15px; }
 .clubs-grid small, .clubs-source, .club-breadcrumb { font-size: 13px; }
 .clubs-grid a { min-height: 132px; gap: 8px; }

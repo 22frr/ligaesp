@@ -71,3 +71,15 @@ Las posiciones se agrupan en Norte y Sur (13 clubes cada una), según las imáge
 Corregir resultados actualiza la tabla y las fichas durante la sesión. Al recargar se restablece la muestra: no hay persistencia ni backend. La antigua muestra de Primera fue reemplazada por este torneo; Reserva se conserva por separado.
 
 Para verificar fixture, zonas y posiciones: `cd frontend` y `node verify-tournament.cjs`.
+
+## Proyección de eliminatorias
+
+La **Copa de ejemplo** tiene acceso directo en el menú: `#division/TorneoDemo/tabla`. En todas las divisiones, las tablas están siempre visibles y se ordenan como Norte, Sur, General y Sin zona asignada (si hay clubes pendientes de asignación). Las divisiones sin datos mantienen las tablas vacías.
+
+Clasifican ocho equipos por zona en todas las divisiones. La proyección usa octavos interzonales (1.º Norte contra 8.º Sur, y así sucesivamente); la siembra sigue siendo de ejemplo. Desde cuartos, los cruces quedan por definir entre quienes avanzan, sin llave fija. La vista pública muestra el cuadro y una explicación breve, sin controles de simulación.
+
+El botón Eliminatorias permanece visible y empieza deshabilitado. En Carga de resultados de cada división, **Habilitar eliminatorias** permite abrir esa sección durante la sesión, sin habilitar las demás divisiones. Deshabilitada, el botón no permite navegar y el enlace directo no muestra el cuadro. Esta es una restricción visual del frontend: el panel demo sigue sin autenticación y no sustituye permisos reales de administración. Al recargar vuelve a estar deshabilitada.
+
+Los puestos se actualizan con los resultados guardados en memoria y se señalan como provisionales. No implementa probabilidades ni una calculadora de fechas restantes. Los cuatro clubes sin zona no participan en esta proyección.
+
+El fixture sigue siendo la muestra de 30 clubes todos contra todos. La cantidad y distribución definitiva de encuentros de zona e interzonales está pendiente; no se presenta como reglamento oficial.
