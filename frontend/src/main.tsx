@@ -1,3 +1,4 @@
+import { groupFixtureByZone, quintaDemoMatches } from "./fixtureZones";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { initialMatches, statuses, formatTime, validateScore, type Match, type Status, } from "./data";
@@ -158,7 +159,7 @@ function MatchRows({ matches, onEdit }: { matches: Match[]; onEdit?: (id: number
 function App() {
     const [route, setRoute] = useState(readRoute);
     const { view, category, section } = route;
-    const [matches, setMatches] = useState(() => [...initialMatches.filter((match) => match.category !== "Primera"), ...createDemoTournament()]);
+    const [matches, setMatches] = useState(() => [...initialMatches.filter((match) => match.category !== "Primera"), ...createDemoTournament(), ...quintaDemoMatches]);
     const [round, setRound] = useState(1);
     const [menuOpen, setMenuOpen] = useState(false);
     const isClubs = view === "clubes";
@@ -218,7 +219,7 @@ function App() {
         <div id="division-menu" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setMenuOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") { setMenuOpen(false); document.querySelector<HTMLButtonElement>(".mobile-menu-toggle")?.focus(); } }}>
         <div className="sidebar-heading"><h2>Competiciones</h2></div>
         <nav aria-label="Seleccionar división">
-          <a className="division-link" data-division={demoTournament.id} aria-current={category === demoTournament.id ? "page" : undefined} href={divisionUrl(demoTournament.id, "tabla")}><span className="division-marker" aria-hidden="true">C</span><span><strong>Copa de ejemplo</strong></span><span className="division-arrow" aria-hidden="true">›</span></a>
+          <a className="division-link" data-division={demoTournament.id} aria-current={category === demoTournament.id ? "page" : undefined} href={divisionUrl(demoTournament.id)}><span className="division-marker" aria-hidden="true">C</span><span><strong>Copa de ejemplo</strong></span><span className="division-arrow" aria-hidden="true">›</span></a>
           <a className="division-link all-matches-link" href="#partidos" aria-current={isHome ? "page" : undefined}><span className="division-code" aria-hidden="true">≡</span><span><strong>Todos los partidos</strong></span></a>
           {divisions.map((d) => <a key={d.id} className="division-link" data-division={d.id} aria-current={category === d.id ? "page" : undefined} href={divisionUrl(d.id)}>
             <span className="division-marker" aria-hidden="true">{d.code}</span>
@@ -313,7 +314,11 @@ function App() {
               <div className="match-heading">
                 <span>{roundLabel(round).toUpperCase()}</span>
               </div>
-              <MatchRows matches={visible} onEdit={view === "carga" ? (id) => { setSelected(id); setNotice(""); } : undefined} />
+              {groupFixtureByZone(visible, category).map((group) => <section className="fixture-zone" key={group.id} aria-labelledby={`fixture-zone-${group.id}`}>
+                <h3 id={`fixture-zone-${group.id}`} className="fixture-zone-title" data-zone={group.id}>{group.label}<span>{group.matches.length} partidos</span></h3>
+                <MatchRows matches={group.matches} onEdit={view === "carga" ? (id) => { setSelected(id); setNotice(""); } : undefined} />
+                {group.matches.length === 0 && <p className="empty">{filtered.length === 0 ? "Sin partidos cargados para esta fecha." : "Sin partidos para esta zona y filtro."}</p>}
+              </section>)}
               {visible.length === 0 && <p className="empty">{filtered.length === 0 ? "Todavía no hay partidos cargados para esta división y fecha." : "No hay partidos con este filtro."}</p>}
               <div className="fixture-footer">
                 {last

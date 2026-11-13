@@ -64,6 +64,8 @@ La compilación ejecuta TypeScript y genera `frontend/dist/`. `preview` permite 
 
 ## Torneo de ejemplo
 
+Las divisiones abren en Partidos. Sus encuentros se separan por Zona Norte, Zona Sur, Interzonales y, cuando corresponde, Sin zona asignada. Quinta incluye tres partidos ficticios en Fecha 1 para mostrar un encuentro de cada zona y un interzonal. Las divisiones sin datos conservan las secciones Norte y Sur vacías. Las asignaciones de esta muestra 2026 se definen por división en `frontend/src/fixtureZones.ts`, sin backend ni persistencia; no representan inscripciones oficiales.
+
 `#division/Primera/partidos` abre el **torneo de ejemplo de Primera**: 30 clubes, 29 fechas y 435 encuentros, todos contra todos a una rueda. Cada club tiene 14 o 15 localías. Las primeras dos fechas incluyen resultados inventados y el resto está programado. El calendario ficticio va del 08/11/2026 al 23/05/2027. El enlace anterior `#division/TorneoDemo/partidos` sigue funcionando.
 
 Las posiciones se agrupan en Norte y Sur (13 clubes cada una), según las imágenes del usuario. Los cuatro clubes restantes figuran sin zona asignada. Es una agrupación visual: el fixture conserva cruces entre zonas y todos los resultados finalizados cuentan para los puntos. Los puntajes de las imágenes no se copiaron.
