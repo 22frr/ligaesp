@@ -236,13 +236,17 @@ button:disabled { opacity: .35; cursor: default; }
   .brand small { display: none; }
 }
 @media (max-width: 700px) {
-  .site-nav { padding: 16px 12px; }
+  .site-nav { padding: 16px 12px; flex-wrap: wrap; }
+  .site-nav .brand { order: 0; }
+  .site-nav nav { order: 2; flex-basis: 100%; }
   .brand>span { font-size: 32px; }
   .site-nav nav a { font-size: 10px; }
   .sidebar { padding: 0 12px; background: #0d2744; }
-  .mobile-menu-toggle { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 44px; padding: 10px 0; border: 0; background: transparent; font-size: 12px; font-weight: 700; }
-  .mobile-menu-toggle span { color: var(--violet); font-size: 20px; line-height: 1; }
+  .mobile-menu-toggle { display: flex; order: 1; align-items: center; justify-content: center; margin-left: auto; width: 44px; height: 44px; padding: 10px; border: 0; background: transparent; cursor: pointer; }
+  .mobile-menu-icon { width: 24px; height: 24px; flex-shrink: 0; color: var(--violet); }
+  .mobile-menu-toggle:focus-visible { outline: 2px solid var(--violet); outline-offset: -2px; border-radius: 4px; }
   #division-menu { display: none; }
+  .sidebar:not(.is-open) { border-bottom: 0; }
   .sidebar.is-open #division-menu { display: block; padding-bottom: 12px; }
   .sidebar-heading { display: none; }
   .sidebar nav { grid-template-columns: 1fr; gap: 2px; }

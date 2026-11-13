@@ -211,10 +211,10 @@ function App() {
           <a href="#clubes" aria-current={isClubs ? "page" : undefined}>Clubes</a>
           <a href={divisionUrl(isHome || isClubs ? "Primera" : category, "partidos", "carga")} aria-current={view === "carga" ? "page" : undefined}>Carga de resultados ↗</a>
         </nav>
+        <button className="mobile-menu-toggle" aria-label={menuOpen ? "Cerrar menú de divisiones" : "Abrir menú de divisiones"} aria-expanded={menuOpen} aria-controls="division-menu" onClick={() => setMenuOpen(!menuOpen)} onKeyDown={(e) => { if (e.key === "Escape") setMenuOpen(false); }}><svg className="mobile-menu-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">{menuOpen ? <path d="m6 6 12 12M6 18 18 6" /> : <path d="M3 6h18M3 12h18M3 18h18" />}</svg></button>
       </header>
       <div className="app-layout" data-division={category}>
       <aside className={`sidebar ${menuOpen ? "is-open" : ""}`} aria-label="Divisiones de la liga">
-        <button className="mobile-menu-toggle" aria-expanded={menuOpen} aria-controls="division-menu" onClick={() => setMenuOpen(!menuOpen)} onKeyDown={(e) => { if (e.key === "Escape") setMenuOpen(false); }}>Divisiones <span aria-hidden="true">{menuOpen ? "−" : "+"}</span></button>
         <div id="division-menu" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setMenuOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") { setMenuOpen(false); document.querySelector<HTMLButtonElement>(".mobile-menu-toggle")?.focus(); } }}>
         <div className="sidebar-heading"><h2>Competiciones</h2></div>
         <nav aria-label="Seleccionar división">
